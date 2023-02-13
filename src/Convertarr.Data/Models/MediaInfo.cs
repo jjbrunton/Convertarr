@@ -14,6 +14,14 @@ namespace Convertarr.Data.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int MediaInfoId { get; set; }
 
-        public string Codec { get; set; }
+        // Summary:
+        //     Duration of media
+        public TimeSpan Duration { get; set;}
+
+        public virtual IEnumerable<VideoStream> VideoStreams {get;set;}
+
+        public virtual IEnumerable<AudioStream> AudioStreams {get;set;}
+
+        public virtual IEnumerable<SubtitleStream> SubtitleStreams {get;set;}
     }
 }

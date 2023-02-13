@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
+using Convertarr.Core.Converters;
 using Convertarr.Data;
 using Convertarr.Data.Models;
 using Hangfire;
@@ -40,12 +42,24 @@ namespace Convertarr.Core
                 {
                     return;
                 }
+                var config = new MapperConfiguration(cfg =>
+                {
+                    cfg.CreateMap<string, string>().ConvertUsing<NullStringConverter>();
+                    cfg.CreateMap<IVideoStream, Data.Models.VideoStream>();
+                    cfg.CreateMap<IAudioStream, Data.Models.AudioStream>();
+                    cfg.CreateMap<ISubtitleStream, Data.Models.SubtitleStream>();
+                }
+                );
+                var mapper = new Mapper(config);
 
                 Debug.WriteLine($"Starting analysis for {dbFile.FilePath}");
                 var fileInfo = await FFmpeg.GetMediaInfo(dbFile.FilePath);
             dbFile.MediaInfo = new Convertarr.Data.Models.MediaInfo
                 {
-                    Codec = fileInfo.VideoStreams.First().Codec
+                    Duration = fileInfo.Duration,
+                    VideoStreams = fileInfo.VideoStreams.Select(x => mapper.Map<Data.Models.VideoStream>(x)),
+                    AudioStreams = fileInfo.AudioStreams.Select(x => mapper.Map<Data.Models.AudioStream>(x)),
+                    SubtitleStreams = fileInfo.SubtitleStreams.Select(x => mapper.Map<Data.Models.SubtitleStream>(x))
                 };
 
                 this._context.Update(dbFile);
